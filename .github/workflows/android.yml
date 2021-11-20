@@ -12,31 +12,31 @@ on:
 
 jobs:
   unit_test:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: grant execute permission for gradlew
         run: chmod +x gradlew
       - name: unit test
-        run: ./gradlew testReleaseUnitTest
+        run: ./gradlew testDebugUnitTest
 
-  instrumented_test:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: set up jdk
-        uses: actions/setup-java@v2
-        with:
-            java-version: '11'
-            distribution: 'adopt'
-            cache: gradle
-      - name: grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: instrumented test
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          script: ./gradlew connectedAndroidTest
+  # instrumented_test:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: set up jdk
+  #       uses: actions/setup-java@v2
+  #       with:
+  #         java-version: '11'
+  #         distribution: 'adopt'
+  #         cache: gradle
+  #     - name: grant execute permission for gradlew
+  #       run: chmod +x gradlew
+  #     - name: instrumented test
+  #       uses: reactivecircus/android-emulator-runner@v2
+  #       with:
+  #         api-level: 29
+  #         script: ./gradlew connectedAndroidTest
 
   build:
     runs-on: ubuntu-latest
@@ -48,8 +48,14 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
         cache: gradle
-    - name: grant execute permission for gradlew
+    - name: grant execute permission to gradlew
       run: chmod +x gradlew
     - name: build with gradle
-      run: ./gradlew bundleDebug
+      # run: ./gradlew bundle
+      run: ./gradlew assembleDebug
 
+    - name: upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: artifact
+        path: ./app/build/outputs/apk/debug/app-debug.apk
