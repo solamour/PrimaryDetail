@@ -51,6 +51,14 @@ jobs:
           distribution: 'adopt'
           cache: gradle
 
+      # https://github.com/marketplace/actions/increment-the-version-code-of-your-project
+      - name: 🆙 increment version
+        uses: chkfung/android-version-actions@v1.1
+        with:
+          gradlePath: app/build.gradle
+          versionCode: ${{github.run_number}}
+          versionName: 1.0.${{github.run_number}}
+
       - name: 🛠️ build
         run: |
           chmod +x ./gradlew
@@ -61,7 +69,7 @@ jobs:
         uses: r0adkll/sign-android-release@v1
         id: sign
         with:
-          releaseDirectory: ./app/build/outputs/apk/debug
+          releaseDirectory: ./app/build/outputs/apk/debug/
           signingKeyBase64: ${{ secrets.SIGNING_KEY_DEBUG }}
           alias: ${{ secrets.ALIAS_DEBUG }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD_DEBUG }}
@@ -90,19 +98,42 @@ jobs:
           distribution: 'adopt'
           cache: gradle
 
+      - name: 🆙 increment version
+        uses: chkfung/android-version-actions@v1.1
+        with:
+          gradlePath: app/build.gradle
+          versionCode: ${{github.run_number}}
+          versionName: 1.0.${{github.run_number}}
+
       - name: 🛠️ build
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease
 
-      - name: rename
-        run: mv ./app/build/outputs/apk/release/app-release{-unsigned,}.apk
+      - name: 🔄 copy
+        run: |
+          # cd ./app/build/outputs/apk/release/
+          for file_name in ./app/build/outputs/apk/release/*.apk; do
+            name="${file_name%.*}"
+            extension="${file_name##*.}"
+            cp -- "$file_name" "$name-unsigned.$extension"
+          done
+
+      - name: ⬆️ upload unsigned artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: ./*.apk
+          retention-days: 1
+
+      # - name: remove
+      #   run: rm ./app/build/outputs/apk/release/*-unsigned.apk
 
       - name: 🖋️ sign
         uses: r0adkll/sign-android-release@v1
         id: sign
         with:
-          releaseDirectory: ./app/build/outputs/apk/release
+          releaseDirectory: ./app/build/outputs/apk/release/
           signingKeyBase64: ${{ secrets.SIGNING_KEY_RELEASE }}
           alias: ${{ secrets.ALIAS_RELEASE }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD_RELEASE }}
@@ -125,8 +156,12 @@ jobs:
         with:
           path: ./
 
-      # ./debug/app-debug.apk
-      # ./release/app-release-unsigned.apk
+      - name: 🔄 rename
+        run: |
+          for file_name in ./debug/*.apk; do
+            mv "$file_name" "$(echo "$file_name" | sed -e 's/-signed//g')"
+          done
+
       - run: ls -laR ./
 
 
@@ -154,6 +189,10 @@ jobs:
 
 
 #---------------------------------------------------------------------------------------------------
+
+# - name: rename
+#   run: mv ./app/build/outputs/apk/release/app-release{-unsigned,}.apk
+
 # - name: ls
 #   run: |
 #     ls -la .
