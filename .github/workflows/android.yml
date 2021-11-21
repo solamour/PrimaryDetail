@@ -38,7 +38,7 @@ jobs:
   #         api-level: 29
   #         script: ./gradlew connectedAndroidTest
 
-  build:
+  build_debug:
     runs-on: ubuntu-latest
     steps:
       - name: 🔃 checkout
@@ -50,54 +50,98 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
           cache: gradle
-      # - name: grant execute permission to gradlew
+
       - name: 🛠️ build
-        # run: ./gradlew bundle
         run: |
           chmod +x ./gradlew
-          ./gradlew assemble
+          ./gradlew assembleDebug
 
-      # https://github.com/marketplace/actions/sign-android-release
-      - name: 🖋️ sign
-        uses: r0adkll/sign-android-release@v1
-        # id: sign_app
+  build_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔃 checkout
+        uses: actions/checkout@v2
+
+      - name: ⚙️ set up jdk
+        uses: actions/setup-java@v2
         with:
-          releaseDirectory: ./app/build/outputs/apk/debug
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        # env:
-          # override default build-tools version (29.0.3) -- optional
-          # BUILD_TOOLS_VERSION: "30.0.2"
+          java-version: '11'
+          distribution: 'adopt'
+          cache: gradle
 
-      # https://github.com/anothrNick/github-tag-action
-      - name: 🏷️ create tag
-        id: create_tag
-        uses: anothrNick/github-tag-action@1.36.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_BUMP: patch
-          WITH_V: true
+      - name: 🛠️ build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
 
-      # https://github.com/marketplace/actions/create-release
-      - name: 🛎️ create release
-        uses: ncipollo/release-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.create_tag.outputs.tag }}
-          artifacts: >
-            ./app/build/outputs/apk/debug/app-debug-signed.apk,
-            ./app/build/outputs/apk/release/app-release-unsigned.apk
+  create_tag:
+    needs: [unit_test, build_debug, build_release]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pwd
+          ls -la ./
+
+
+      
+
+
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 🔃 checkout
+  #       uses: actions/checkout@v2
+
+  #     - name: ⚙️ set up jdk
+  #       uses: actions/setup-java@v2
+  #       with:
+  #         java-version: '11'
+  #         distribution: 'adopt'
+  #         cache: gradle
+  #     # - name: grant execute permission to gradlew
+  #     - name: 🛠️ build
+  #       # run: ./gradlew bundle
+  #       run: |
+  #         chmod +x ./gradlew
+  #         ./gradlew assemble
+
+      # # https://github.com/marketplace/actions/sign-android-release
+      # - name: 🖋️ sign
+      #   uses: r0adkll/sign-android-release@v1
+      #   # id: sign_app
+      #   with:
+      #     releaseDirectory: ./app/build/outputs/apk/debug
+      #     signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+      #     alias: ${{ secrets.ALIAS }}
+      #     keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+      #     keyPassword: ${{ secrets.KEY_PASSWORD }}
+      #   # env:
+      #     # BUILD_TOOLS_VERSION: "30.0.2"
+
+      # # https://github.com/anothrNick/github-tag-action
+      # - name: 🏷️ create tag
+      #   id: create_tag
+      #   uses: anothrNick/github-tag-action@1.36.0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     DEFAULT_BUMP: patch
+      #     WITH_V: true
+
+      # # https://github.com/marketplace/actions/create-release
+      # - name: 🛎️ create release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: ${{ steps.create_tag.outputs.tag }}
+      #     artifacts: >
+      #       ./app/build/outputs/apk/debug/app-debug-signed.apk,
+      #       ./app/build/outputs/apk/release/app-release-unsigned.apk
 
 
 #---------------------------------------------------------------------------------------------------
       # - name: ls
       #   run: |
       #     ls -la .
-      #     ls -la ~/
-      #     ls -la ./app/build/outputs/apk/debug/app-debug-signed.apk
-      #     ls -la ./app/build/outputs/apk/release/app-release-unsigned.apk
 
       # /home/runner/work/MainDetail/MainDetail
       # - name: pwd
