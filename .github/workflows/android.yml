@@ -72,33 +72,30 @@ jobs:
           # BUILD_TOOLS_VERSION: "30.0.2"
 
       # https://github.com/anothrNick/github-tag-action
-      # - name: 🏷️ create tag
-      #   id: create_tag
-      #   uses: anothrNick/github-tag-action@1.36.0
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     DEFAULT_BUMP: patch
-      #     WITH_V: true
+      - name: 🏷️ create tag
+        id: create_tag
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+          WITH_V: true
 
-      - name: ls
-        run: |
-          ls -la .
-          ls -la ~/
-          ls -la ./app/build/outputs/apk/debug/
-          ls -la ./app/build/outputs/apk/release/
-          ls -la ~/app/build/outputs/apk/debug/
-          ls -la ~/app/build/outputs/apk/release/
+      # - name: ls
+      #   run: |
+      #     ls -la .
+      #     ls -la ~/
+      #     ls -la ./app/build/outputs/apk/debug/app-debug-signed.apk
+      #     ls -la ./app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: pwd
+        run: pwd
 
       # https://github.com/marketplace/actions/create-release
-      # - name: 🛎️ create release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     tag: ${{ steps.create_tag.outputs.tag }}
-      #     artifacts: |
-      #       ~/app/build/outputs/apk/debug/app-debug-signed.apk
-      #       ~/app/build/outputs/apk/release/app-release-unsigned.apk
-
+      - name: 🛎️ create release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.create_tag.outputs.tag }}
+          artifacts: "./app/build/outputs/apk/debug/app-debug-signed.apk,./app/build/outputs/apk/release/app-release-unsigned.apk"
 
 
 
