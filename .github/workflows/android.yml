@@ -41,7 +41,7 @@ jobs:
   build_debug:
     runs-on: ubuntu-latest
     steps:
-      - name: 🔃 checkout
+      - name: 🗸 checkout
         uses: actions/checkout@v2
 
       - name: ⚙️ set up jdk
@@ -56,10 +56,18 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
+      # https://github.com/actions/upload-artifact
+      - name: ⬆️ upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+        # app-debug-signed.apk
+          name: debug
+          path: ./app/build/outputs/apk/debug/app-debug.apk
+
   build_release:
     runs-on: ubuntu-latest
     steps:
-      - name: 🔃 checkout
+      - name: 🗸 checkout
         uses: actions/checkout@v2
 
       - name: ⚙️ set up jdk
@@ -78,32 +86,18 @@ jobs:
     needs: [unit_test, build_debug, build_release]
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          pwd
-          ls -la ./
+      # https://github.com/actions/download-artifact
+      - name: ⬇️ download debug
+        uses: actions/download-artifact@v2
+        with:
+          name: debug
+
+      - run: ls -la ./
 
 
       
 
 
-  # build:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 🔃 checkout
-  #       uses: actions/checkout@v2
-
-  #     - name: ⚙️ set up jdk
-  #       uses: actions/setup-java@v2
-  #       with:
-  #         java-version: '11'
-  #         distribution: 'adopt'
-  #         cache: gradle
-  #     # - name: grant execute permission to gradlew
-  #     - name: 🛠️ build
-  #       # run: ./gradlew bundle
-  #       run: |
-  #         chmod +x ./gradlew
-  #         ./gradlew assemble
 
       # # https://github.com/marketplace/actions/sign-android-release
       # - name: 🖋️ sign
