@@ -54,46 +54,66 @@ jobs:
         # run: ./gradlew bundle
         run: ./gradlew assemble
 
+      - uses: r0adkll/sign-android-release@v1
+        name: sign apk
+        # ID used to access action output
+        # id: sign_app
+        with:
+          releaseDirectory: ./app/build/outputs/apk/debug
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        # env:
+          # override default build-tools version (29.0.3) -- optional
+          # BUILD_TOOLS_VERSION: "30.0.2"
+
+      - name: ls
+        run: ls -la ./app/build/outputs/apk/debug/
+
+      - name: create release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ./app/build/outputs/apk/debug/app-debug.apk
+            ./app/build/outputs/apk/release/app-release-unsigned.apk
+
+
+
       # - name: upload artifact
       #   uses: actions/upload-artifact@v2
       #   with:
       #     name: artifact
       #     path: ./app/build/outputs/apk/debug/app-debug.apk
 
-      - name: create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-
-      - name: save name of artifact
-        id: set-result-artifact
-        run: |
-          ARTIFACT_PATHNAME_APK=$(ls ./app/build/outputs/apk/debug/app-debug.apk | head -n 1)
-          ARTIFACT_NAME_APK=$(basename $ARTIFACT_PATHNAME_APK)
-          echo "ARTIFACT_NAME_APK is " ${ARTIFACT_NAME_APK}
-          echo "ARTIFACT_PATHNAME_APK=${ARTIFACT_PATHNAME_APK}" >> $GITHUB_ENV
-          echo "ARTIFACT_NAME_APK=${ARTIFACT_NAME_APK}" >> $GITHUB_ENV
-
-      - name: upload artifact
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.ARTIFACT_PATHNAME_APK }}
-          asset_name: ${{ env.ARTIFACT_NAME_APK }}
-          asset_content_type: application/zip
-
       # - name: create release
-      #   uses: softprops/action-gh-release@v1
-      #   if: startsWith(github.ref, 'refs/tags/')
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #   with:
-      #     files: |
-      #       ./app/build/outputs/apk/debug/app-debug.apk
-      #       ./app/build/outputs/apk/release/app-release-unsigned.apk
+      #     tag_name: ${{ github.ref }}
+      #     release_name: ${{ github.ref }}
+
+      # - name: save name of artifact
+      #   id: set-result-artifact
+      #   run: |
+      #     ARTIFACT_PATHNAME_APK=$(ls ./app/build/outputs/apk/debug/app-debug.apk | head -n 1)
+      #     ARTIFACT_NAME_APK=$(basename $ARTIFACT_PATHNAME_APK)
+      #     echo "ARTIFACT_NAME_APK is " ${ARTIFACT_NAME_APK}
+      #     echo "ARTIFACT_PATHNAME_APK=${ARTIFACT_PATHNAME_APK}" >> $GITHUB_ENV
+      #     echo "ARTIFACT_NAME_APK=${ARTIFACT_NAME_APK}" >> $GITHUB_ENV
+
+      # - name: upload release asset
+      #   id: upload-release-asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ${{ env.ARTIFACT_PATHNAME_APK }}
+      #     asset_name: ${{ env.ARTIFACT_NAME_APK }}
+      #     asset_content_type: application/zip
+
 
