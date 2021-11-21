@@ -80,24 +80,28 @@ jobs:
           DEFAULT_BUMP: patch
           WITH_V: true
 
-      # - name: ls
-      #   run: |
-      #     ls -la .
-      #     ls -la ~/
-      #     ls -la ./app/build/outputs/apk/debug/app-debug-signed.apk
-      #     ls -la ./app/build/outputs/apk/release/app-release-unsigned.apk
-      - name: pwd
-        run: pwd
-
       # https://github.com/marketplace/actions/create-release
       - name: 🛎️ create release
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.create_tag.outputs.tag }}
-          artifacts: "./app/build/outputs/apk/debug/app-debug-signed.apk,./app/build/outputs/apk/release/app-release-unsigned.apk"
+          artifacts: >
+            ./app/build/outputs/apk/debug/app-debug-signed.apk,
+            ./app/build/outputs/apk/release/app-release-unsigned.apk
 
 
+#---------------------------------------------------------------------------------------------------
+      # - name: ls
+      #   run: |
+      #     ls -la .
+      #     ls -la ~/
+      #     ls -la ./app/build/outputs/apk/debug/app-debug-signed.apk
+      #     ls -la ./app/build/outputs/apk/release/app-release-unsigned.apk
+
+      # /home/runner/work/MainDetail/MainDetail
+      # - name: pwd
+      #   run: pwd
 
       # tag:
       #   needs: [unit_test, build]
@@ -151,5 +155,3 @@ jobs:
       #     asset_path: ${{ env.ARTIFACT_PATHNAME_APK }}
       #     asset_name: ${{ env.ARTIFACT_NAME_APK }}
       #     asset_content_type: application/zip
-
-
