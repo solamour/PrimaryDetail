@@ -112,7 +112,6 @@ jobs:
 
       - name: 🔄 copy
         run: |
-          # cd ./app/build/outputs/apk/release/
           for file_name in ./app/build/outputs/apk/release/*.apk; do
             name="${file_name%.*}"
             extension="${file_name##*.}"
@@ -125,9 +124,6 @@ jobs:
           name: release
           path: ./*.apk
           retention-days: 1
-
-      # - name: remove
-      #   run: rm ./app/build/outputs/apk/release/*-unsigned.apk
 
       - name: 🖋️ sign
         uses: r0adkll/sign-android-release@v1
@@ -164,10 +160,6 @@ jobs:
 
       - run: ls -laR ./
 
-
-
-
-
       # # https://github.com/anothrNick/github-tag-action
       # - name: 🏷️ tag action
       #   id: create_tag
@@ -177,15 +169,27 @@ jobs:
       #     DEFAULT_BUMP: patch
       #     WITH_V: true
 
-      # # https://github.com/marketplace/actions/create-release
-      # - name: 🛎️ release action
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     tag: ${{ steps.create_tag.outputs.tag }}
-      #     artifacts: >
-      #       ./app/build/outputs/apk/debug/app-debug-signed.apk,
-      #       ./app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: 🏷️ create tag
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            github.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "refs/tags/1.0.${{github.run_number}}",
+              sha: context.sha
+            })          
+
+      # https://github.com/marketplace/actions/create-release
+      - name: 🛎️ release action
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.create_tag.outputs.tag }}
+          artifacts: >
+            ./app/build/outputs/apk/debug/*.apk,
+            ./app/build/outputs/apk/release/*.apk
 
 
 #---------------------------------------------------------------------------------------------------
