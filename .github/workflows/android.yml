@@ -1,7 +1,7 @@
 name: Android CI
 
 env:
-  version: v1.0.${{ github.run_number }}
+  version: 1.0.${{ github.run_number }}
 
 on:
   push:
@@ -117,8 +117,8 @@ jobs:
 
       - name: 🔄 copy
         run: |
-          for file_name in ./app/build/outputs/apk/release/*.apk; do
-            name="${file_name%.*}"
+          for file_name in ./app/build/outputs/apk/release/*.apk; do            
+            name=$(basename $file_name .apk)
             extension="${file_name##*.}"
             cp -- "$file_name" "$name-unsigned.$extension"
           done
