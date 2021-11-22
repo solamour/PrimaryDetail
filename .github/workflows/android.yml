@@ -1,5 +1,8 @@
 name: Android CI
 
+env:
+  version: v1.0.${{ github.run_number }}
+
 on:
   push:
     branches:
@@ -15,28 +18,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: grant execute permission for gradlew
-        run: chmod +x gradlew
       - name: unit test
-        run: ./gradlew testDebugUnitTest
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest
 
-  # instrumented_test:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: set up jdk
-  #       uses: actions/setup-java@v2
-  #       with:
-  #         java-version: '11'
-  #         distribution: 'adopt'
-  #         cache: gradle
-  #     - name: grant execute permission for gradlew
-  #       run: chmod +x gradlew
-  #     - name: instrumented test
-  #       uses: reactivecircus/android-emulator-runner@v2
-  #       with:
-  #         api-level: 29
-  #         script: ./gradlew connectedAndroidTest
+  instrumented_test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: ⚙️ set up jdk
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          cache: gradle
+      # - name: grant execute permission for gradlew
+      #   run: chmod +x gradlew
+      - name: instrumented test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          script: |
+            chmod +x gradlew
+            ./gradlew connectedAndroidTest
 
   build_debug:
     runs-on: ubuntu-latest
@@ -52,12 +57,12 @@ jobs:
           cache: gradle
 
       # https://github.com/marketplace/actions/increment-the-version-code-of-your-project
-      - name: 🆙 increment version
+      - name: 🆙 set version
         uses: chkfung/android-version-actions@v1.1
         with:
           gradlePath: app/build.gradle
           versionCode: ${{ github.run_number }}
-          versionName: 1.0.${{ github.run_number }}
+          versionName: ${{ env.version }}
 
       - name: 🛠️ build
         run: |
@@ -98,12 +103,12 @@ jobs:
           distribution: 'adopt'
           cache: gradle
 
-      - name: 🆙 increment version
+      - name: 🆙 set version
         uses: chkfung/android-version-actions@v1.1
         with:
           gradlePath: app/build.gradle
           versionCode: ${{ github.run_number }}
-          versionName: 1.0.${{ github.run_number }}
+          versionName: ${{ env.version }}
 
       - name: 🛠️ build
         run: |
@@ -135,7 +140,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD_RELEASE }}
           keyPassword: ${{ secrets.KEY_PASSWORD_RELEASE }}
 
-      - name: ⬆️ upload artifact
+      - name: ⬆️ upload signed artifact
         uses: actions/upload-artifact@v2
         with:
           name: release
@@ -143,7 +148,7 @@ jobs:
           retention-days: 1
 
   create_release:
-    needs: [unit_test, build_debug, build_release]
+    needs: [unit_test, instrumented_test, build_debug, build_release]
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/download-artifact
@@ -152,22 +157,11 @@ jobs:
         with:
           path: ./
 
-      - name: 🔄 rename
+      - name: 🔄 rename debug build
         run: |
           for file_name in ./debug/*.apk; do
             mv "$file_name" "$(echo "$file_name" | sed -e 's/-signed//g')"
           done
-
-      - run: ls -laR ./
-
-      # # https://github.com/anothrNick/github-tag-action
-      # - name: 🏷️ tag action
-      #   id: create_tag
-      #   uses: anothrNick/github-tag-action@1.36.0
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     DEFAULT_BUMP: patch
-      #     WITH_V: true
 
       - name: 🏷️ create tag
         uses: actions/github-script@v3
@@ -177,7 +171,7 @@ jobs:
             github.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "refs/tags/1.0.${{ github.run_number }}",
+              ref: "refs/tags/${{ env.version }}",
               sha: context.sha
             })          
 
@@ -187,13 +181,26 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # tag: ${{ steps.create_tag.outputs.tag }}
-          tag: 1.0.${{ github.run_number }}
+          tag: ${{ env.version }}
           artifacts: >
-            ./app/build/outputs/apk/debug/*.apk,
-            ./app/build/outputs/apk/release/*.apk
-
+            ./debug/*.apk,
+            ./release/*.apk
 
 #---------------------------------------------------------------------------------------------------
+
+# # https://github.com/anothrNick/github-tag-action
+# - name: 🏷️ tag action
+#   id: create_tag
+#   uses: anothrNick/github-tag-action@1.36.0
+#   env:
+#     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     DEFAULT_BUMP: patch
+#     WITH_V: true
+
+# - name: foo
+#   run: echo "${{ env.VERSION }}"
+
+# - run: ls -laR ./
 
 # - name: rename
 #   run: mv ./app/build/outputs/apk/release/app-release{-unsigned,}.apk
