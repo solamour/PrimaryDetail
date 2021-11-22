@@ -23,25 +23,25 @@ jobs:
           chmod +x gradlew
           ./gradlew testDebugUnitTest
 
-  instrumented_test:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: ⚙️ set up jdk
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-          cache: gradle
-      # - name: grant execute permission for gradlew
-      #   run: chmod +x gradlew
-      - name: instrumented test
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          script: |
-            chmod +x gradlew
-            ./gradlew connectedAndroidTest
+  # instrumented_test:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: ⚙️ set up jdk
+  #       uses: actions/setup-java@v2
+  #       with:
+  #         java-version: '11'
+  #         distribution: 'adopt'
+  #         cache: gradle
+  #     # - name: grant execute permission for gradlew
+  #     #   run: chmod +x gradlew
+  #     - name: instrumented test
+  #       uses: reactivecircus/android-emulator-runner@v2
+  #       with:
+  #         api-level: 29
+  #         script: |
+  #           chmod +x gradlew
+  #           ./gradlew connectedAndroidTest
 
   build_debug:
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD_DEBUG }}
           keyPassword: ${{ secrets.KEY_PASSWORD_DEBUG }}
         # env:
-          # BUILD_TOOLS_VERSION: "32.0.0"
+        #   BUILD_TOOLS_VERSION: "32.0.0"
 
       # https://github.com/actions/upload-artifact
       - name: ⬆️ upload artifact
@@ -148,7 +148,8 @@ jobs:
           retention-days: 1
 
   create_release:
-    needs: [unit_test, instrumented_test, build_debug, build_release]
+    # needs: [unit_test, instrumented_test, build_debug, build_release]
+    needs: [unit_test, build_debug, build_release]
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/download-artifact
@@ -180,7 +181,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # tag: ${{ steps.create_tag.outputs.tag }}
           tag: ${{ env.version }}
           artifacts: >
             ./debug/*.apk,
@@ -196,6 +196,16 @@ jobs:
 #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #     DEFAULT_BUMP: patch
 #     WITH_V: true
+
+# # https://github.com/marketplace/actions/create-release
+# - name: 🛎️ release action
+#   uses: ncipollo/release-action@v1
+#   with:
+#     token: ${{ secrets.GITHUB_TOKEN }}
+#     tag: ${{ steps.create_tag.outputs.tag }}
+#     artifacts: >
+#       ./debug/*.apk,
+#       ./release/*.apk
 
 # - name: foo
 #   run: echo "${{ env.VERSION }}"
