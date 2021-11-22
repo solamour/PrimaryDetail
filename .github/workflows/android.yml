@@ -23,25 +23,25 @@ jobs:
           chmod +x gradlew
           ./gradlew testDebugUnitTest
 
-  instrumented_test:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: ⚙️ set up jdk
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-          cache: gradle
-      # - name: grant execute permission for gradlew
-      #   run: chmod +x gradlew
-      - name: instrumented test
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          script: |
-            chmod +x gradlew
-            ./gradlew connectedAndroidTest
+  # instrumented_test:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: ⚙️ set up jdk
+  #       uses: actions/setup-java@v2
+  #       with:
+  #         java-version: '11'
+  #         distribution: 'adopt'
+  #         cache: gradle
+  #     # - name: grant execute permission for gradlew
+  #     #   run: chmod +x gradlew
+  #     - name: instrumented test
+  #       uses: reactivecircus/android-emulator-runner@v2
+  #       with:
+  #         api-level: 29
+  #         script: |
+  #           chmod +x gradlew
+  #           ./gradlew connectedAndroidTest
 
   build_debug:
     runs-on: ubuntu-latest
@@ -148,7 +148,8 @@ jobs:
           retention-days: 1
 
   create_release:
-    needs: [unit_test, instrumented_test, build_debug, build_release]
+    # needs: [unit_test, instrumented_test, build_debug, build_release]
+    needs: [unit_test, build_debug, build_release]
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/download-artifact
