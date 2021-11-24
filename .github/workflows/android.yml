@@ -69,6 +69,9 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
+      ####
+      - run: ls -la ./app/build/outputs/apk/debug/
+
       # https://github.com/marketplace/actions/sign-android-release
       - name: 🖋️ sign
         uses: r0adkll/sign-android-release@v1
@@ -81,6 +84,9 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD_DEBUG }}
         # env:
         #   BUILD_TOOLS_VERSION: "32.0.0"
+
+      ####
+      - run: ls -la ./app/build/outputs/apk/debug/
 
       # https://github.com/actions/upload-artifact
       - name: ⬆️ upload artifact
@@ -115,6 +121,9 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleRelease
 
+      ####
+      - run: ls -la ./app/build/outputs/apk/release/
+
       - name: 🔄 copy
         run: |
           for file_name in ./app/build/outputs/apk/release/*.apk; do            
@@ -122,6 +131,9 @@ jobs:
             extension="${file_name##*.}"
             cp -- "$file_name" "$name-unsigned.$extension"
           done
+
+      ####
+      - run: ls -la .
 
       - name: ⬆️ upload unsigned artifact
         uses: actions/upload-artifact@v2
@@ -139,6 +151,9 @@ jobs:
           alias: ${{ secrets.ALIAS_RELEASE }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD_RELEASE }}
           keyPassword: ${{ secrets.KEY_PASSWORD_RELEASE }}
+
+      ####
+      - run: ls -la ./app/build/outputs/apk/release/
 
       - name: ⬆️ upload signed artifact
         uses: actions/upload-artifact@v2
