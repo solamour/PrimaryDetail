@@ -1,7 +1,9 @@
 name: Android CI
 
 env:
-  version: 1.0.${{ github.run_number }}
+  versionName: "1.0"
+  versionCode: $GITHUB_RUN_NUMBER
+  offset: 100
 
 on:
   push:
@@ -27,7 +29,7 @@ jobs:
   #   runs-on: macos-latest
   #   steps:
   #     - uses: actions/checkout@v2
-  #     - name: ⚙️ set up jdk
+  #     - name: set up jdk
   #       uses: actions/setup-java@v2
   #       with:
   #         java-version: '11'
@@ -46,31 +48,37 @@ jobs:
   build_debug:
     runs-on: ubuntu-latest
     steps:
-      - name: 🗸 checkout
+      - name: checkout
         uses: actions/checkout@v2
 
-      - name: ⚙️ set up jdk
+      - name: set up jdk
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'adopt'
           cache: gradle
 
+      - name: set versionCode and versionName
+        run: |
+          versionCode=$(( ${{ env.versionCode }} + ${{ env.offset }} ))
+          echo "VERSION_CODE=$versionCode" >> $GITHUB_ENV
+          echo "VERSION_NAME=${{ env.versionName }}.$versionCode" >> $GITHUB_ENV
+
       # https://github.com/marketplace/actions/increment-the-version-code-of-your-project
-      - name: 🆙 set version
+      - name: set version
         uses: chkfung/android-version-actions@v1.1
         with:
           gradlePath: app/build.gradle
-          versionCode: ${{ github.run_number }}
-          versionName: ${{ env.version }}
+          versionCode: ${{ env.VERSION_CODE }}
+          versionName: ${{ env.VERSION_NAME }}
 
-      - name: 🛠️ build
+      - name: build
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
       # https://github.com/marketplace/actions/sign-android-release
-      - name: 🖋️ sign
+      - name: sign
         uses: r0adkll/sign-android-release@v1
         id: sign
         with:
@@ -83,39 +91,45 @@ jobs:
         #   BUILD_TOOLS_VERSION: "32.0.0"
 
       # https://github.com/actions/upload-artifact
-      - name: ⬆️ upload artifact
+      - name: upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: debug
-          path: ${{steps.sign.outputs.signedReleaseFile}}
+          path: ${{ steps.sign.outputs.signedReleaseFile }}
           retention-days: 1
 
   build_release:
     runs-on: ubuntu-latest
     steps:
-      - name: 🗸 checkout
+      - name: checkout
         uses: actions/checkout@v2
 
-      - name: ⚙️ set up jdk
+      - name: set up jdk
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'adopt'
           cache: gradle
 
-      - name: 🆙 set version
+      - name: set versionCode and versionName
+        run: |
+          versionCode=$(( ${{ env.versionCode }} + ${{ env.offset }} ))
+          echo "VERSION_CODE=$versionCode" >> $GITHUB_ENV
+          echo "VERSION_NAME=${{ env.versionName }}.$versionCode" >> $GITHUB_ENV
+
+      - name: set version
         uses: chkfung/android-version-actions@v1.1
         with:
           gradlePath: app/build.gradle
-          versionCode: ${{ github.run_number }}
-          versionName: ${{ env.version }}
+          versionCode: ${{ env.VERSION_CODE }}
+          versionName: ${{ env.VERSION_NAME }}
 
-      - name: 🛠️ build
+      - name: build
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease
 
-      - name: 🔄 copy
+      - name: copy
         run: |
           for file_name in ./app/build/outputs/apk/release/*.apk; do            
             name=$(basename $file_name .apk)
@@ -123,14 +137,14 @@ jobs:
             cp -- "$file_name" "$name-unsigned.$extension"
           done
 
-      - name: ⬆️ upload unsigned artifact
+      - name: upload unsigned artifact
         uses: actions/upload-artifact@v2
         with:
           name: release
           path: ./*.apk
           retention-days: 1
 
-      - name: 🖋️ sign
+      - name: sign
         uses: r0adkll/sign-android-release@v1
         id: sign
         with:
@@ -140,31 +154,38 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD_RELEASE }}
           keyPassword: ${{ secrets.KEY_PASSWORD_RELEASE }}
 
-      - name: ⬆️ upload signed artifact
+      - name: upload signed artifact
         uses: actions/upload-artifact@v2
         with:
           name: release
-          path: ${{steps.sign.outputs.signedReleaseFile}}
+          path: ${{ steps.sign.outputs.signedReleaseFile }}
           retention-days: 1
 
   create_release:
     # needs: [unit_test, instrumented_test, build_debug, build_release]
+    # needs: [build_debug, build_release]
     needs: [unit_test, build_debug, build_release]
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/download-artifact
-      - name: ⬇️ download artifact
+      - name: download artifact
         uses: actions/download-artifact@v2
         with:
           path: ./
 
-      - name: 🔄 rename debug build
+      - name: rename debug build
         run: |
           for file_name in ./debug/*.apk; do
             mv "$file_name" "$(echo "$file_name" | sed -e 's/-signed//g')"
           done
 
-      - name: 🏷️ create tag
+      - name: set versionCode and versionName
+        run: |
+          versionCode=$(( ${{ env.versionCode }} + ${{ env.offset }} ))
+          echo "VERSION_CODE=$versionCode" >> $GITHUB_ENV
+          echo "VERSION_NAME=${{ env.versionName }}.$versionCode" >> $GITHUB_ENV
+
+      - name: create tag
         uses: actions/github-script@v3
         with:
           github-token: ${{ github.token }}
@@ -172,24 +193,38 @@ jobs:
             github.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "refs/tags/${{ env.version }}",
+              ref: "refs/tags/${{ env.VERSION_NAME }}",
               sha: context.sha
             })          
 
       # https://github.com/marketplace/actions/create-release
-      - name: 🛎️ release action
+      - name: release action
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.version }}
+          tag: ${{ env.VERSION_NAME }}
           artifacts: >
             ./debug/*.apk,
             ./release/*.apk
 
 #---------------------------------------------------------------------------------------------------
 
+# - name: set versionCode and versionName
+#   run: |
+#     versionCode=$(( ${{ env.versionCode }} + ${{ env.offset }} ))
+#     echo "VERSION_CODE=$versionCode" >> $GITHUB_ENV
+#     echo "VERSION_NAME=${{ env.versionName }}.$versionCode" >> $GITHUB_ENV
+# - name: test
+#   run: |
+#     echo "VERSION_CODE: $VERSION_CODE"
+#     echo "VERSION_CODE: ${{ env.VERSION_CODE }}"
+#     echo "VERSION_NAME: $VERSION_NAME"
+#     echo "VERSION_NAME: ${{ env.VERSION_NAME }}"
+
+# 🗸 ⚙️ 🆙 🛠️ 🖋️ ⬆️ ⬇️ 🔄 🏷️ 🛎️ 
+
 # # https://github.com/anothrNick/github-tag-action
-# - name: 🏷️ tag action
+# - name: tag action
 #   id: create_tag
 #   uses: anothrNick/github-tag-action@1.36.0
 #   env:
@@ -198,7 +233,7 @@ jobs:
 #     WITH_V: true
 
 # # https://github.com/marketplace/actions/create-release
-# - name: 🛎️ release action
+# - name: release action
 #   uses: ncipollo/release-action@v1
 #   with:
 #     token: ${{ secrets.GITHUB_TOKEN }}
@@ -228,7 +263,7 @@ jobs:
 #   runs-on: ubuntu-latest
 
 # https://github.com/softprops/action-gh-release
-# - name: 🛎️ create release
+# - name: create release
 #   uses: softprops/action-gh-release@v1
 #   if: startsWith(github.ref, 'refs/tags/')
 #   with:
