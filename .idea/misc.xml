@@ -3,7 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/solamour/Dropbox/AndroidStudioProjects/MainDetail/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.2518518518518518" />
+        <entry key="..\:/Users/solamour/Dropbox/AndroidStudioProjects/MainDetail/app/src/main/res/drawable/ic_launcher_background.xml" value="0.2518518518518518" />
         <entry key="..\:/Users/solamour/Dropbox/AndroidStudioProjects/MainDetail/app/src/main/res/layout/fragment_item_detail.xml" value="0.2341485507246377" />
+        <entry key="..\:/Users/solamour/Dropbox/AndroidStudioProjects/MainDetail/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2518518518518518" />
+        <entry key="..\:/Users/solamour/Dropbox/AndroidStudioProjects/MainDetail/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.2518518518518518" />
       </map>
     </option>
   </component>
