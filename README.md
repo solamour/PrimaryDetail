@@ -1,1 +1,1 @@
-# MainDetail
+# PrimaryDetail
