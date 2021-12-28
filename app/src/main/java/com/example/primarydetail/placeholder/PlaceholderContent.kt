@@ -1,4 +1,4 @@
-package com.example.maindetail.placeholder
+package com.example.primarydetail.placeholder
 
 import java.util.ArrayList
 import java.util.HashMap

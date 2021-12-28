@@ -1,4 +1,4 @@
-package com.example.maindetail
+package com.example.primarydetail
 
 import org.junit.Test
 

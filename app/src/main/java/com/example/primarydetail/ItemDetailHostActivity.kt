@@ -1,4 +1,4 @@
-package com.example.maindetail
+package com.example.primarydetail
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -7,7 +7,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.example.maindetail.databinding.ActivityItemDetailBinding
+import com.example.primarydetail.databinding.ActivityItemDetailBinding
 
 class ItemDetailHostActivity : AppCompatActivity() {
 
@@ -19,8 +19,7 @@ class ItemDetailHostActivity : AppCompatActivity() {
         val binding = ActivityItemDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_item_detail) as NavHostFragment
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_item_detail) as NavHostFragment
         val navController = navHostFragment.navController
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)

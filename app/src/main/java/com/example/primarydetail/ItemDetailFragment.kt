@@ -1,4 +1,4 @@
-package com.example.maindetail
+package com.example.primarydetail
 
 import android.content.ClipData
 import android.os.Bundle
@@ -9,8 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.example.maindetail.placeholder.PlaceholderContent
-import com.example.maindetail.databinding.FragmentItemDetailBinding
+import com.example.primarydetail.placeholder.PlaceholderContent
+import com.example.primarydetail.databinding.FragmentItemDetailBinding
 
 /**
  * A fragment representing a single Item detail screen.
@@ -58,8 +58,8 @@ class ItemDetailFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
 
         _binding = FragmentItemDetailBinding.inflate(inflater, container, false)
